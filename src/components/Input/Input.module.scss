@@ -1,0 +1,48 @@
+.input_wrapper {
+  position: relative;
+  min-width: 100px;
+  width: 100%;
+
+  .input {
+    box-sizing: border-box;
+    width: 100%;
+    background-color: #FAFAFA;
+    color: #242424;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    min-width: 100px;
+    padding: 8px;
+    font-size: 14px;
+    line-height: 16px;
+  }
+
+  .disabled {
+    border-color: #d8d8d8;
+  }
+
+  .error {
+    outline: darkred;
+  }
+
+  .adornment {
+    position: absolute;
+    cursor: pointer;
+    top: 4px;
+    right: 4px;
+    transition-duration: 0.3s;
+
+    &:hover {
+      scale: 1.1;
+    }
+  }
+
+  .errorText {
+    position: absolute;
+    top: -16px;
+    left: 8px;
+    margin: 0;
+    font-size: 10px;
+    color: darkred;
+  }
+}
+
