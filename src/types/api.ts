@@ -1,5 +1,5 @@
-export type Country = { id: string; name: string; flag: string };
-export type City = { id: number; name: string };
+export type Country = { id: string; name: string; flag: string; countryId: string };
+export type City = { id: number; name: string; countryId: string };
 export type Hotel = {
   id: number;
   name: string;

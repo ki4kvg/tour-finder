@@ -5,7 +5,7 @@ import { CrossIcon } from '@/assets';
 import type { InputProps } from '@/types';
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
-  const { disabled, value, error, helperText, handleClear, ...rest } = props;
+  const { disabled = false, value = '', error, helperText, handleClear, ...rest } = props;
 
   const handleClearValue = (event: React.MouseEvent<SVGSVGElement>) => {
     event.stopPropagation();
@@ -17,6 +17,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
       <input
         {...rest}
         ref={ref}
+        disabled={disabled}
         type="text"
         value={value}
         className={classNames(styles.input, disabled && styles.disabled, error && styles.error)}

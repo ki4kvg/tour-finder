@@ -1,27 +1,49 @@
 import styles from './SearchTourForm.module.scss';
 import Button from '@/components/Button/Button.tsx';
 import IconLabel from '@/components/IconLabel/IconLabel.tsx';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CityIcon, HotelIcon } from '@/assets';
-import { useGetCountriesQuery, useSearchGeoQuery } from '@/store/api.ts';
+import {
+  useGetCountriesQuery,
+  useLazyGetSearchPricesQuery,
+  useLazyStartSearchPricesQuery,
+  useSearchGeoQuery,
+} from '@/store/api.ts';
 import useDebounce from '@/hooks/useDebounce.ts';
 import { type Country, type CountryType, type GeoEntity } from '@/types/api.ts';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import DropdownInput from '@/components/Dropdown/DropdownInput.tsx';
+import Loader from '@/components/Loader/Loader.tsx';
+import useWaitAndRefetch from '@/hooks/useWaitRefetch.ts';
+import { useDispatch, useSelector } from 'react-redux';
+import { setError, setPrices } from '@/store/searchPricesSlice.ts';
+import type { RootState } from '@/store/store.ts';
+import EmptyState from '@/components/EmptyState/EmptyState.tsx';
 
 const SEARCH_TOUR = {
   SEARCH_VALUE_ID: 'searchValue',
+  SELECTED_OBJECT_ID: 'selectedValue',
 } as const;
 
 const formSchema = z.object({
-  [SEARCH_TOUR.SEARCH_VALUE_ID]: z.string().min(1, { message: 'Будь ласка, введіть інформацію для пошуку' }),
+  [SEARCH_TOUR.SEARCH_VALUE_ID]: z.string().min(1, 'Будь ласка, введіть інформацію для пошуку'),
+  [SEARCH_TOUR.SELECTED_OBJECT_ID]: z
+    .object({
+      countryId: z.union([z.string(), z.number()]),
+    })
+    .optional(),
 });
 
 export function SearchTourForm() {
+  const dispatch = useDispatch();
+  const token = useRef<string>('');
+
   const [searchValueType, setSearchValueType] = useState<CountryType | undefined>();
   const [isOpen, setIsOpen] = useState(false);
+  const [isPricesLoading, setIsPricesLoading] = useState(false);
+  const [waitUntil, setWaitUntil] = useState<string | null>(null);
 
   const {
     register,
@@ -36,12 +58,35 @@ export function SearchTourForm() {
   });
 
   const searchField = watch(SEARCH_TOUR.SEARCH_VALUE_ID);
-
-  const { data: countries } = useGetCountriesQuery();
-
   const debouncedValue = useDebounce(searchField, 300);
 
+  const { data: countries } = useGetCountriesQuery();
   const { data: geoSearchData } = useSearchGeoQuery({ query: debouncedValue }, { skip: !debouncedValue });
+
+  const [startSearchPrice] = useLazyStartSearchPricesQuery();
+  const [getSearchPrices] = useLazyGetSearchPricesQuery();
+
+  const { isEmpty, isError } = useSelector((state: RootState) => state.searchPrices);
+
+  useWaitAndRefetch(
+    waitUntil,
+    () => dispatch(setError({ error: true })),
+    async () => {
+      if (!token.current) return;
+      try {
+        const data = await getSearchPrices({ token: token.current }).unwrap();
+        dispatch(
+          setPrices({
+            prices: data.prices,
+          }),
+        );
+      } catch (error) {
+        console.error('Error fetching prices', error);
+      } finally {
+        setIsPricesLoading(false);
+      }
+    },
+  );
 
   const options = useMemo<GeoEntity[] | Country[]>(() => {
     if (!isOpen) return [];
@@ -66,6 +111,9 @@ export function SearchTourForm() {
     const type = 'type' in option ? option.type : 'country';
     setSearchValueType(type);
     setValue(SEARCH_TOUR.SEARCH_VALUE_ID, option.name);
+    setValue(SEARCH_TOUR.SELECTED_OBJECT_ID, {
+      countryId: type === 'country' ? option.id : option.countryId,
+    });
     setIsOpen(false);
   };
 
@@ -82,10 +130,18 @@ export function SearchTourForm() {
   };
 
   const onSubmit = async (form: any) => {
-    //TODO In next task
+    setIsPricesLoading(true);
+    try {
+      const countryId = form[SEARCH_TOUR.SELECTED_OBJECT_ID].countryId;
+      const data = await startSearchPrice({ countryId: countryId }).unwrap();
+      setWaitUntil(data.waitUntil);
+      token.current = data.token;
+    } catch (error) {
+      console.error(error, 'Error starting search');
+    }
   };
 
-  const onInvalid = (errors: any) => console.error(errors);
+  const onInvalid = (errors: any) => console.error('onInvalid', errors);
 
   useEffect(() => {
     if (!searchField) {
@@ -98,6 +154,7 @@ export function SearchTourForm() {
       <p>Форма пошуку турів</p>
       <form className={styles.form} onSubmit={handleSubmit(onSubmit, onInvalid)}>
         <DropdownInput
+          disabled={isPricesLoading}
           isShown={isOpen}
           value={searchField}
           handleClear={handleClear}
@@ -116,9 +173,12 @@ export function SearchTourForm() {
             />
           ))}
         </DropdownInput>
-        <Button color="primary" type="submit">
+        <Button color="primary" type="submit" disabled={isPricesLoading}>
           Знайти
         </Button>
+        {isPricesLoading && <Loader text={'Виконується пошук'} />}
+        {isEmpty && !isPricesLoading && !isError && <EmptyState text="За вашим запитом турів не знайдено" />}
+        {isError && !isPricesLoading && <p className={styles.error_text}>Помилка пошуку</p>}
       </form>
     </div>
   );

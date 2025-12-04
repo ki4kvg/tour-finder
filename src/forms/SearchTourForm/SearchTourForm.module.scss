@@ -11,8 +11,14 @@
 
   p {
     margin: 0 0 16px 0;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 500;
+  }
+
+  .error_text {
+    text-align: center;
+    font-size: 18px;
+    color: #c00;
   }
 
   .form {
