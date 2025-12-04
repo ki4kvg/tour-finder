@@ -7,13 +7,18 @@ type Props = {
   color?: 'secondary' | 'primary';
   adornment?: React.ReactNode;
   adornmentPosition?: 'start' | 'end';
+  disabled?: boolean;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 function Button(props: Props) {
-  const { color = 'secondary', ...rest } = props;
+  const { color = 'secondary', disabled = false, ...rest } = props;
 
   return (
-    <button {...rest} className={classNames(styles.button, styles[color])}>
+    <button
+      {...rest}
+      disabled={disabled}
+      className={classNames(styles.button, styles[color], disabled && styles.disabled)}
+    >
       {props.children}
     </button>
   );

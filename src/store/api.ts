@@ -48,10 +48,10 @@ export const api = createApi({
       },
     }),
 
-    startSearchPrices: builder.query<StartSearchResponse, { countryID: string }>({
-      queryFn: async ({ countryID }) => {
+    startSearchPrices: builder.query<StartSearchResponse, { countryId: string }>({
+      queryFn: async ({ countryId }) => {
         try {
-          const res = await startSearchPrices(countryID);
+          const res = await startSearchPrices(countryId);
           const data = await res.json();
           return { data };
         } catch (error: any) {
@@ -84,10 +84,10 @@ export const api = createApi({
       },
     }),
 
-    getHotels: builder.query<HotelsMap, { countryID: string }>({
-      queryFn: async ({ countryID }) => {
+    getHotels: builder.query<HotelsMap, { countryId: string }>({
+      queryFn: async ({ countryId }) => {
         try {
-          const res = await getHotels(countryID);
+          const res = await getHotels(countryId);
           const data = await res.json();
           return { data };
         } catch (err: any) {
@@ -96,10 +96,10 @@ export const api = createApi({
       },
     }),
 
-    getHotel: builder.query<Hotel, { hotelID: number | string }>({
-      queryFn: async ({ hotelID }) => {
+    getHotel: builder.query<Hotel, { hotelId: number | string }>({
+      queryFn: async ({ hotelId }) => {
         try {
-          const res = await getHotel(hotelID);
+          const res = await getHotel(hotelId);
           const data = await res.json();
           return { data };
         } catch (err: any) {
@@ -127,8 +127,10 @@ export const {
   useGetHotelsQuery,
   useGetHotelQuery,
   useGetPriceQuery,
-  useGetSearchPricesQuery,
   useSearchGeoQuery,
   useStartSearchPricesQuery,
+  useLazyStartSearchPricesQuery,
+  useGetSearchPricesQuery,
+  useLazyGetSearchPricesQuery,
   useStopSearchPricesQuery,
 } = api;

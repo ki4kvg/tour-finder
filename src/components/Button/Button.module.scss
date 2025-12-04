@@ -1,7 +1,7 @@
 .button {
   border: none;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   padding: 8px;
   transition-duration: 0.3s;
@@ -10,6 +10,11 @@
   &:hover {
     opacity: 0.8;
   }
+}
+
+.disabled {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .primary {
