@@ -1,4 +1,4 @@
-.wrapper {
+.icon_label_wrapper {
   min-width: 120px;
   border-radius: 4px;
   display: flex;
@@ -8,6 +8,7 @@
   justify-content: start;
   cursor: pointer;
   transition-duration: 0.3s;
+  font-size: 16px;
 
   &:hover {
     background-color: #dcdcdc;

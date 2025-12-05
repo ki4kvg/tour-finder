@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { api } from '@/store/api.ts';
 import searchPricesReducer from './searchPricesSlice';
+import hotelSliceReducer from './hotelSlice';
 
 export const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
     searchPrices: searchPricesReducer,
+    hotels: hotelSliceReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(api.middleware),
 });
