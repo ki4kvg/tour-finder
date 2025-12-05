@@ -20,10 +20,17 @@ function ToursList() {
 
   const linkedTours = useMemo(() => {
     if (!prices || !hotels) return [];
-    return hotels.map((hotel) => ({
-      ...hotel,
-      tour: prices.find((price) => price.hotelID === hotel.id.toString()) || null,
-    }));
+
+    return hotels
+      .map((hotel) => ({
+        ...hotel,
+        tour: prices.find((price) => price.hotelID === hotel.id.toString()) || null,
+      }))
+      .sort((a, b) => {
+        const priceA = a.tour?.amount ?? Infinity;
+        const priceB = b.tour?.amount ?? Infinity;
+        return priceA - priceB;
+      });
   }, [prices, hotels]);
 
   useEffect(() => {
@@ -36,15 +43,14 @@ function ToursList() {
 
   useEffect(() => {
     if (isLoading) return;
-
-    if (linkedTours.length === 0) {
+    if (!data || prices?.length === 0) {
       navigate('/');
     }
-  }, [linkedTours, isLoading, navigate]);
+  }, [isLoading, prices?.length, data]);
 
   return (
     <div className={styles.container}>
-      {isLoading && <Loader size={80} />}
+      {isLoading && !linkedTours && <Loader size={80} />}
       {linkedTours.map((tour) => (
         <HotelCard key={tour.id} hotel={tour as LinkedTour} />
       ))}

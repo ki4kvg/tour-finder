@@ -16,7 +16,7 @@ function TourDetails() {
     { skip: !hotelId },
   );
   const { data: priceData, isLoading: isPriceOfferLoading } = useGetPriceQuery(
-    { priceId: priceId },
+    { priceId: priceId! },
     { skip: !priceId },
   );
 
