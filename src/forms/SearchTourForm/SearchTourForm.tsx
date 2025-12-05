@@ -21,6 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setError, setPrices } from '@/store/searchPricesSlice.ts';
 import type { RootState } from '@/store/store.ts';
 import EmptyState from '@/components/EmptyState/EmptyState.tsx';
+import { useNavigate } from 'react-router-dom';
 
 const SEARCH_TOUR = {
   SEARCH_VALUE_ID: 'searchValue',
@@ -38,6 +39,7 @@ const formSchema = z.object({
 
 export function SearchTourForm() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const token = useRef<string>('');
 
   const [searchValueType, setSearchValueType] = useState<CountryType | undefined>();
@@ -58,6 +60,7 @@ export function SearchTourForm() {
   });
 
   const searchField = watch(SEARCH_TOUR.SEARCH_VALUE_ID);
+  const selectedValue = watch(SEARCH_TOUR.SELECTED_OBJECT_ID);
   const debouncedValue = useDebounce(searchField, 300);
 
   const { data: countries } = useGetCountriesQuery();
@@ -80,6 +83,7 @@ export function SearchTourForm() {
             prices: data.prices,
           }),
         );
+        navigate(`/tours/${selectedValue!.countryId}`);
       } catch (error) {
         console.error('Error fetching prices', error);
       } finally {

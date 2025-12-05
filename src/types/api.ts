@@ -10,6 +10,10 @@ export type Hotel = {
   countryName: string;
 };
 
+export type LinkedTour = {
+  tour: PriceOffer;
+} & Hotel;
+
 // Колекції у вигляді словників
 export type CountriesMap = Record<string, Country>;
 export type HotelsMap = Record<string, Hotel>;

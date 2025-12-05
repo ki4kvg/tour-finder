@@ -17,7 +17,7 @@ function IconLabel(props: Props) {
     onClick?.();
   };
   return (
-    <div {...rest} onClick={handleClick} className={classNames(styles.wrapper, styles[iconPosition])}>
+    <div {...rest} onClick={handleClick} className={classNames(styles.icon_label_wrapper, styles[iconPosition])}>
       {icon}
       {label}
     </div>

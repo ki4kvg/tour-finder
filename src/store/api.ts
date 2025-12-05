@@ -22,6 +22,7 @@ import type {
 
 export const api = createApi({
   reducerPath: 'api',
+  keepUnusedDataFor: 600,
   baseQuery: () => ({ data: null }),
   endpoints: (builder) => ({
     getCountries: builder.query<CountriesMap, void>({
