@@ -7,6 +7,7 @@ import {
   useGetCountriesQuery,
   useLazyGetSearchPricesQuery,
   useLazyStartSearchPricesQuery,
+  useLazyStopSearchPricesQuery,
   useSearchGeoQuery,
 } from '@/store/api.ts';
 import useDebounce from '@/hooks/useDebounce.ts';
@@ -22,6 +23,7 @@ import { setError, setPrices } from '@/store/searchPricesSlice.ts';
 import type { RootState } from '@/store/store.ts';
 import EmptyState from '@/components/EmptyState/EmptyState.tsx';
 import { useNavigate } from 'react-router-dom';
+import { useLatestRequestGuard } from '@/hooks/useLatestRequest.ts';
 
 const SEARCH_TOUR = {
   SEARCH_VALUE_ID: 'searchValue',
@@ -45,6 +47,7 @@ export function SearchTourForm() {
   const [searchValueType, setSearchValueType] = useState<CountryType | undefined>();
   const [isOpen, setIsOpen] = useState(false);
   const [isPricesLoading, setIsPricesLoading] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
   const [waitUntil, setWaitUntil] = useState<string | null>(null);
 
   const {
@@ -68,8 +71,11 @@ export function SearchTourForm() {
 
   const [startSearchPrice] = useLazyStartSearchPricesQuery();
   const [getSearchPrices] = useLazyGetSearchPricesQuery();
+  const [stopSearch] = useLazyStopSearchPricesQuery();
 
   const { isEmpty, isError } = useSelector((state: RootState) => state.searchPrices);
+
+  const { runWithGuard, invalidate } = useLatestRequestGuard();
 
   useWaitAndRefetch(
     waitUntil,
@@ -77,12 +83,19 @@ export function SearchTourForm() {
     async () => {
       if (!token.current) return;
       try {
-        const data = await getSearchPrices({ token: token.current }).unwrap();
+        const result = await runWithGuard(async () => {
+          return await getSearchPrices({ token: token.current }).unwrap();
+        });
+
+        if (!result) return;
+
         dispatch(
           setPrices({
-            prices: data.prices,
+            prices: result.prices,
           }),
         );
+        token.current = '';
+        if (Object.keys(result.prices).length === 0) return;
         navigate(`/tours/${selectedValue!.countryId}`);
       } catch (error) {
         console.error('Error fetching prices', error);
@@ -135,11 +148,27 @@ export function SearchTourForm() {
 
   const onSubmit = async (form: any) => {
     setIsPricesLoading(true);
+    if (token.current) {
+      setIsCanceling(true);
+      try {
+        await stopSearch({ token: token.current });
+        invalidate();
+        token.current = '';
+        setWaitUntil(null);
+      } finally {
+        setIsCanceling(false);
+      }
+    }
     try {
-      const countryId = form[SEARCH_TOUR.SELECTED_OBJECT_ID].countryId;
-      const data = await startSearchPrice({ countryId: countryId }).unwrap();
-      setWaitUntil(data.waitUntil);
-      token.current = data.token;
+      const result = await runWithGuard(async () => {
+        const countryId = form[SEARCH_TOUR.SELECTED_OBJECT_ID].countryId;
+        return await startSearchPrice({ countryId }).unwrap();
+      });
+
+      if (!result) return;
+
+      setWaitUntil(result.waitUntil);
+      token.current = result.token;
     } catch (error) {
       console.error(error, 'Error starting search');
     }
@@ -158,7 +187,6 @@ export function SearchTourForm() {
       <p>Форма пошуку турів</p>
       <form className={styles.form} onSubmit={handleSubmit(onSubmit, onInvalid)}>
         <DropdownInput
-          disabled={isPricesLoading}
           isShown={isOpen}
           value={searchField}
           handleClear={handleClear}
@@ -177,12 +205,18 @@ export function SearchTourForm() {
             />
           ))}
         </DropdownInput>
-        <Button color="primary" type="submit" disabled={isPricesLoading}>
+        <Button color="primary" type="submit" disabled={isCanceling}>
           Знайти
         </Button>
-        {isPricesLoading && <Loader text={'Виконується пошук'} />}
-        {isEmpty && !isPricesLoading && !isError && <EmptyState text="За вашим запитом турів не знайдено" />}
-        {isError && !isPricesLoading && <p className={styles.error_text}>Помилка пошуку</p>}
+        {isCanceling && <Loader text="Пошук скасовується" />}
+
+        {!isCanceling && isPricesLoading && <Loader text="Виконується пошук" />}
+
+        {!isCanceling && !isPricesLoading && isError && <p className={styles.error_text}>Помилка пошуку</p>}
+
+        {!isCanceling && !isPricesLoading && !isError && isEmpty && (
+          <EmptyState text="За вашим запитом турів не знайдено" />
+        )}
       </form>
     </div>
   );

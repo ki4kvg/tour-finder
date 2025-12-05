@@ -134,4 +134,5 @@ export const {
   useGetSearchPricesQuery,
   useLazyGetSearchPricesQuery,
   useStopSearchPricesQuery,
+  useLazyStopSearchPricesQuery,
 } = api;
