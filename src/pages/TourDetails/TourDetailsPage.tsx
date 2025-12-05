@@ -1,5 +1,7 @@
+import TourDetails from '@/components/TourDetails/TourDetails.tsx';
+
 function TourDetailsPage() {
-  return <></>;
+  return <TourDetails />;
 }
 
 export default TourDetailsPage;

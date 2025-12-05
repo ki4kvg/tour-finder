@@ -8,10 +8,12 @@ export type Hotel = {
   cityName: string;
   countryId: string;
   countryName: string;
+  description?: string;
+  services?: Record<string, string>;
 };
 
 export type LinkedTour = {
-  tour: PriceOffer;
+  tour: PriceOffer | null;
 } & Hotel;
 
 // Колекції у вигляді словників
