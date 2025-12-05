@@ -3,13 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setHotels } from '@/store/hotelSlice.ts';
-import styles from './HotelList.module.scss';
+import styles from './ToursList.module.scss';
 import Loader from '@/components/Loader/Loader.tsx';
 import type { RootState } from '@/store/store.ts';
 import HotelCard from '@/components/HotelCard/HotelCard.tsx';
 import type { LinkedTour } from '@/types/api.ts';
 
-function HotelList() {
+function ToursList() {
   const { countryId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -22,13 +22,9 @@ function HotelList() {
     if (!prices || !hotels) return [];
     return hotels.map((hotel) => ({
       ...hotel,
-      tour: prices.find((price) => price.hotelID === hotel.id.toString()),
+      tour: prices.find((price) => price.hotelID === hotel.id.toString()) || null,
     }));
   }, [prices, hotels]);
-
-  useEffect(() => {
-    localStorage.setItem('linkedTour', JSON.stringify(linkedTours));
-  }, [linkedTours]);
 
   useEffect(() => {
     if (!countryId) return;
@@ -38,7 +34,13 @@ function HotelList() {
     }
   }, [data, countryId, dispatch]);
 
-  if (!prices || !hotels) navigate('/');
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (linkedTours.length === 0) {
+      navigate('/');
+    }
+  }, [linkedTours, isLoading, navigate]);
 
   return (
     <div className={styles.container}>
@@ -50,4 +52,4 @@ function HotelList() {
   );
 }
 
-export default HotelList;
+export default ToursList;
